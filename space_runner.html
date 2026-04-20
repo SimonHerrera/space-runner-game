@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Space Runner - USA Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+        
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            color: #0ff;
+            font-size: 14px;
+            z-index: 10;
+            text-shadow: 0 0 10px #0ff;
+            pointer-events: none;
+        }
+        
+        #startScreen, #endScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #1a0a2e 0%, #0a0a1a 100%);
+            z-index: 100;
+        }
+        
+        #endScreen {
+            display: none;
+        }
+        
+        h1 {
+            font-size: 48px;
+            color: #fff;
+            text-shadow: 0 0 30px #0ff, 0 0 60px #00f;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        
+        .instructions {
+            color: #aaa;
+            font-size: 12px;
+            text-align: center;
+            max-width: 300px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+        
+        .btn {
+            background: linear-gradient(180deg, #00d4ff 0%, #0066ff 100%);
+            border: none;
+            padding: 20px 60px;
+            font-size: 20px;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.5);
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(0, 200, 255, 0.8);
+        }
+        
+        .stats {
+            color: #0ff;
+            font-size: 24px;
+            margin: 10px 0;
+            text-shadow: 0 0 20px #0ff;
+        }
+        
+        .highlight {
+            color: #ff0;
+            font-size: 36px;
+        }
+        
+        #nameInput {
+            background: rgba(0, 200, 255, 0.1);
+            border: 2px solid #0ff;
+            padding: 15px 20px;
+            font-size: 24px;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+            width: 200px;
+            margin: 20px 0;
+            text-transform: uppercase;
+            maxlength: 8;
+        }
+        
+        #nameInput:focus {
+            outline: none;
+            border-color: #ff0;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+        }
+        
+        .highScores {
+            margin-top: 30px;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .scoreEntry {
+            color: #0ff;
+            margin: 5px 0;
+        }
+        
+        #levelIndicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff0;
+            font-size: 18px;
+            text-shadow: 0 0 15px #ff0;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        #levelIndicator.max {
+            color: #f00;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui">
+        <div>TIME: <span id="timeDisplay">0.0</span>s</div>
+        <div>MILES: <span id="milesDisplay">0</span></div>
+    </div>
+    
+    <div id="levelIndicator">LEVEL 1</div>
+    
+    <div id="startScreen">
+        <h1>🚀 SPACE RUNNER</h1>
+        <div class="subtitle">USA EDITION</div>
+        <div class="instructions">
+            Use ARROW KEYS or TOUCH/DRAG to steer<br>
+            Auto-shoot enabled<br>
+            Survive 90 seconds to win!<br><br>
+            Blue → Space transition at 10 seconds<br>
+            Speed increases every 10 seconds<br>
+            Max speed at Level 9
+        </div>
+        <button class="btn" onclick="startGame()">LAUNCH</button>
+    </div>
+    
+    <div id="endScreen">
+        <h1>MISSION COMPLETE</h1>
+        <div class="stats">TIME: <span id="finalTime" class="highlight">0</span>s</div>
+        <div class="stats">MILES: <span id="finalMiles" class="highlight">0</span></div>
+        
+        <div style="margin-top: 30px;">
+            <div style="color: #888; font-size: 14px;">ENTER YOUR CALLSIGN</div>
+            <input type="text" id="nameInput" maxlength="8" placeholder="NAME">
+        </div>
+        
+        <button class="btn" onclick="saveScore()" style="margin-top: 20px;">SAVE</button>
+        
+        <div class="highScores">
+            <div>TOP PILOTS</div>
+            <div id="scoreList"></div>
+        </div>
+        
+        <button class="btn" onclick="restartGame()" style="margin-top: 30px; padding: 15px 40px; font-size: 16px;">PLAY AGAIN</button>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let W, H;
+        let gameRunning = false;
+        let gameTime = 0;
+        let miles = 0;
+        let level = 1;
+        let baseSpeed = 2;
+        let currentSpeed = baseSpeed;
+        let lastSpeedIncrease = 0;
+        
+        // Player
+        const player = {
+            x: 0,
+            y: 0,
+            width: 40,
+            height: 60,
+            vx: 0,
+            vy: 0,
+            thrust: 0.3,
+            maxSpeed: 8,
+            friction: 0.96
+        };
+        
+        // Input
+        const keys = {};
+        let touchStart = null;
+        let touchCurrent = null;
+        
+        // Game objects
+        let stars = [];
+        let obstacles = [];
+        let bullets = [];
+        let particles = [];
+        
+        // Colors
+        let skyColor = { r: 100, g: 150, b: 255 };
+        let targetSkyColor = { r: 100, g: 150, b: 255 };
+        
+        // High scores
+        let highScores = JSON.parse(localStorage.getItem('spaceRunnerScores') || '[]');
+        
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            player.x = W / 2;
+            player.y = H / 2;
+        }
+        
+        function init() {
+            resize();
+            window.addEventListener('resize', resize);
+            
+            // Keyboard
+            window.addEventListener('keydown', e => {
+                keys[e.key] = true;
+                if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+            });
+            window.addEventListener('keyup', e => keys[e.key] = false);
+            
+            // Touch
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                touchCurrent = { ...touchStart };
+            });
+            canvas.addEventListener('touchmove', e => {
+                e.preventDefault();
+                if(touchCurrent) {
+                    touchCurrent.x = e.touches[0].clientX;
+                    touchCurrent.y = e.touches[0].clientY;
+                }
+            });
+            canvas.addEventListener('touchend', () => {
+                touchStart = null;
+                touchCurrent = null;
+            });
+            
+            // Mouse
+            canvas.addEventListener('mousemove', e => {
+                if(touchCurrent) {
+                    touchCurrent.x = e.clientX;
+                    touchCurrent.y = e.clientY;
+                }
+            });
+            
+            // Generate initial stars
+            for(let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 0.5 + 0.2,
+                    brightness: Math.random()
+                });
+            }
+            
+            updateScoreDisplay();
+        }
+        
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            gameRunning = true;
+            gameTime = 0;
+            miles = 0;
+            level = 1;
+            currentSpeed = baseSpeed;
+            lastSpeedIncrease = 0;
+            obstacles = [];
+            bullets = [];
+            particles = [];
+            player.x = W / 2;
+            player.y = H / 2;
+            player.vx = 0;
+            player.vy = 0;
+            skyColor = { r: 135, g: 206, b: 235 }; // Day sky blue
+            targetSkyColor = { r: 135, g: 206, b: 235 };
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function gameLoop(timestamp) {
+            if(!gameRunning) return;
+            
+            const dt = 1/60;
+            gameTime += dt;
+            
+            // Level up every 10 seconds
+            if(gameTime >= 10 && level < 9) {
+                const newLevel = Math.floor(gameTime / 10) + 1;
+                if(newLevel > level && newLevel <= 9) {
+                    level = newLevel;
+                    currentSpeed = baseSpeed * Math.pow(1.1, level - 1);
+                    lastSpeedIncrease = gameTime;
+                    
+                    // Visual feedback
+                    for(let i = 0; i < 20; i++) {
+                        particles.push({
+                            x: player.x,
+                            y: player.y,
+                            vx: (Math.random() - 0.5) * 10,
+                            vy: (Math.random() - 0.5) * 10,
+                            life: 1,
+                            color: '#ff0'
+                        });
+                    }
+                }
+            }
+            
+            // Level 9 = max speed
+            if(level === 9) {
+                currentSpeed = baseSpeed * Math.pow(1.1, 8);
+                document.getElementById('levelIndicator').classList.add('max');
+                document.getElementById('levelIndicator').textContent = 'MAX SPEED';
+            } else {
+                document.getElementById('levelIndicator').classList.remove('max');
+                document.getElementById('levelIndicator').textContent = 'LEVEL ' + level;
+            }
+            
+            // Track miles
+            if(gameTime - lastSpeedIncrease >= 10 || lastSpeedIncrease === 0) {
+                miles += Math.floor(currentSpeed * 10);
+            }
+            
+            // Sky transition after 10 seconds
+            if(gameTime > 10) {
+                targetSkyColor = { r: 5, g: 5, b: 20 }; // Space dark
+            }
+            
+            // Smooth color transition
+            skyColor.r += (targetSkyColor.r - skyColor.r) * 0.01;
+            skyColor.g += (targetSkyColor.g - skyColor.g) * 0.01;
+            skyColor.b += (targetSkyColor.b - skyColor.b) * 0.01;
+            
+            // Update player
+            updatePlayer();
+            
+            // Update stars
+            updateStars();
+            
+            // Spawn obstacles
+            spawnObstacles();
+            
+            // Update obstacles
+            updateObstacles();
+            
+            // Update bullets
+            updateBullets();
+            
+            // Update particles
+            updateParticles();
+            
+            // Collision detection
+            checkCollisions();
+            
+            // Draw
+            draw();
+            
+            // UI
+            document.getElementById('timeDisplay').textContent = gameTime.toFixed(1);
+            document.getElementById('milesDisplay').textContent = miles;
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function updatePlayer() {
+            // Keyboard input
+            if(keys['ArrowLeft'] || keys['a']) player.vx -= player.thrust;
+            if(keys['ArrowRight'] || keys['d']) player.vx += player.thrust;
+            if(keys['ArrowUp'] || keys['w']) player.vy -= player.thrust;
+            if(keys['ArrowDown'] || keys['s']) player.vy += player.thrust;
+            
+            // Touch/mouse input
+            if(touchStart && touchCurrent) {
+                const dx = touchCurrent.x - player.x;
+                const dy = touchCurrent.y - player.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist > 10) {
+                    player.vx += (dx / dist) * player.thrust;
+                    player.vy += (dy / dist) * player.thrust;
+                }
+            }
+            
+            // Apply friction
+            player.vx *= player.friction;
+            player.vy *= player.friction;
+            
+            // Clamp speed
+            const speed = Math.sqrt(player.vx*player.vx + player.vy*player.vy);
+            if(speed > player.maxSpeed) {
+                player.vx = (player.vx / speed) * player.maxSpeed;
+                player.vy = (player.vy / speed) * player.maxSpeed;
+            }
+            
+            // Constrain to middle 30% of screen
+            const marginX = W * 0.35;
+            const marginY = H * 0.35;
+            player.x = Math.max(marginX, Math.min(W - marginX, player.x + player.vx));
+            player.y = Math.max(marginY, Math.min(H - marginY, player.y + player.vy));
+            
+            // Auto-shoot
+            if(Math.random() < 0.1) {
+                bullets.push({
+                    x: player.x,
+                    y: player.y - player.height/2,
+                    vy: -15,
+                    life: 60
+                });
+            }
+        }
+        
+        function updateStars() {
+            stars.forEach(star => {
+                star.y += currentSpeed * star.speed;
+                if(star.y > H) {
+                    star.y = 0;
+                    star.x = Math.random() * W;
+                }
+            });
+        }
+        
+        function spawnObstacles() {
+            if(Math.random() < 0.02 + level * 0.005) {
+                const side = Math.floor(Math.random() * 4);
+                let x, y, vx, vy, type, size;
+                
+                // Don't spawn in middle 30%
+                const safeMarginX = W * 0.3;
+                const safeMarginY = H * 0.3;
+                
+                switch(side) {
+                    case 0: // Top
+                        x = Math.random() * W;
+                        y = -50;
+                        break;
+                    case 1: // Right
+                        x = W + 50;
+                        y = safeMarginY + Math.random() * (H * 0.4);
+                        break;
+                    case 2: // Bottom
+                        x = Math.random() * W;
+                        y = H + 50;
+                        break;
+                    case 3: // Left
+                        x = -50;
+                        y = safeMarginY + Math.random() * (H * 0.4);
+                        break;
+                }
+                
+                // Type based on game progress
+                const rand = Math.random();
+                if(gameTime < 20) {
+                    type = 'asteroid';
+                    size = 20 + Math.random() * 30;
+                } else if(gameTime < 50) {
+                    type = rand < 0.7 ? 'asteroid' : 'planet';
+                    size = rand < 0.7 ? 20 + Math.random() * 30 : 40 + Math.random() * 40;
+                } else {
+                    if(rand < 0.5) type = 'planet';
+                    else if(rand < 0.8) type = 'asteroid';
+                    else type = 'blackhole';
+                    size = type === 'blackhole' ? 30 + Math.random() * 20 : 40 + Math.random() * 50;
+                }
+                
+                // Velocity towards center-ish
+                const angle = Math.atan2(H/2 - y, W/2 - x) + (Math.random() - 0.5) * 0.5;
+                const speed = currentSpeed * (0.5 + Math.random() * 0.5);
+                
+                obstacles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    type,
+                    size,
+                    rotation: 0,
+                    rotationSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+        }
+        
+        function updateObstacles() {
+            obstacles.forEach(obs => {
+                obs.x += obs.vx + currentSpeed * 0.5;
+                obs.y += obs.vy;
+                obs.rotation += obs.rotationSpeed;
+            });
+            
+            // Remove off-screen
+            obstacles = obstacles.filter(obs => 
+                obs.x > -100 && obs.x < W + 100 && 
+                obs.y > -100 && obs.y < H + 100
+            );
+        }
+        
+        function updateBullets() {
+            bullets.forEach(b => {
+                b.y += b.vy;
+                b.life--;
+            });
+            bullets = bullets.filter(b => b.life > 0 && b.y > -20);
+        }
+        
+        function updateParticles() {
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+            });
+            particles = particles.filter(p => p.life > 0);
+        }
+        
+        function checkCollisions() {
+            // Bullet vs obstacle
+            bullets.forEach((bullet, bi) => {
+                obstacles.forEach((obs, oi) => {
+                    const dx = bullet.x - obs.x;
+                    const dy = bullet.y - obs.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(dist < obs.size) {
+                        // Explosion particles
+                        for(let i = 0; i < 10; i++) {
+                            particles.push({
+                                x: obs.x,
+                                y: obs.y,
+                                vx: (Math.random() - 0.5) * 5,
+                                vy: (Math.random() - 0.5) * 5,
+                                life: 1,
+                                color: obs.type === 'blackhole' ? '#f0f' : '#fa0'
+                            });
+                        }
+                        obstacles.splice(oi, 1);
+                        bullets.splice(bi, 1);
+                    }
+                });
+            });
+            
+            // Player vs obstacle
+            obstacles.forEach(obs => {
+                const dx = player.x - obs.x;
+                const dy = player.y - obs.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist < obs.size/2 + 15) {
+                    endGame();
+                }
+            });
+        }
+        
+        function draw() {
+            // Background
+            ctx.fillStyle = `rgb(${Math.floor(skyColor.r)}, ${Math.floor(skyColor.g)}, ${Math.floor(skyColor.b)})`;
+            ctx.fillRect(0, 0, W, H);
+            
+            // Stars
+            if(gameTime > 10) {
+                stars.forEach(star => {
+                    const alpha = 0.5 + Math.sin(Date.now() * 0.001 + star.brightness * 10) * 0.5;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            // Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+            
+            // Bullets
+            ctx.fillStyle = '#ff0';
+            bullets.forEach(b => {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Obstacles
+            obstacles.forEach(obs => {
+                ctx.save();
+                ctx.translate(obs.x, obs.y);
+                ctx.rotate(obs.rotation);
+                
+                if(obs.type === 'planet') {
+                    // Planet
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, obs.size);
+                    gradient.addColorStop(0, '#4a4');
+                    gradient.addColorStop(0.5, '#262');
+                    gradient.addColorStop(1, '#141');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, obs.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Craters
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.arc(obs.size/4, -obs.size/6, obs.size/6, 0, Math.PI*2);
+                    ctx.fill();
+                } else if(obs.type === 'blackhole') {
+                    // Black hole with event horizon
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, obs.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#f0f';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, obs.size/2 + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else {
+                    // Asteroid
+                    ctx.fillStyle = '#654';
+                    ctx.beginPath();
+                    ctx.moveTo(obs.size/2, 0);
+                    for(let i = 1; i < 7; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        const r = obs.size/2 * (0.7 + Math.sin(i * 3) * 0.3);
+                        ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            });
+            
+            // Player rocket
+            drawRocket(player.x, player.y);
+        }
+        
+        function drawRocket(x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            
+            // Engine flame
+            const flameHeight = 15 + Math.random() * 10;
+            const gradient = ctx.createLinearGradient(0, 15, 0, 15 + flameHeight);
+            gradient.addColorStop(0, '#ff0');
+            gradient.addColorStop(0.5, '#f80');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(-8, 15);
+            ctx.lineTo(0, 15 + flameHeight);
+            ctx.lineTo(8, 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Body
+            ctx.fillStyle = '#ddd';
+            ctx.beginPath();
+            ctx.moveTo(0, -30);
+            ctx.lineTo(15, 15);
+            ctx.lineTo(-15, 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // USA text
+            ctx.fillStyle = '#0066cc';
+            ctx.font = 'bold 10px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('USA', 0, 0);
+            
+            // Cockpit
+            ctx.fillStyle = '#0af';
+            ctx.beginPath();
+            ctx.arc(0, -12, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Fins
+            ctx.fillStyle = '#c00';
+            ctx.beginPath();
+            ctx.moveTo(-15, 10);
+            ctx.lineTo(-25, 20);
+            ctx.lineTo(-15, 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(15, 10);
+            ctx.lineTo(25, 20);
+            ctx.lineTo(15, 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('endScreen').style.display = 'flex';
+            document.getElementById('finalTime').textContent = gameTime.toFixed(1);
+            document.getElementById('finalMiles').textContent = miles;
+            document.getElementById('nameInput').value = '';
+            updateScoreDisplay();
+        }
+        
+        function saveScore() {
+            const name = document.getElementById('nameInput').value.toUpperCase() || 'ANON';
+            const score = { name: name.substring(0, 8), time: gameTime.toFixed(1), miles };
+            highScores.push(score);
+            highScores.sort((a, b) => parseFloat(b.time) - parseFloat(a.time));
+            highScores = highScores.slice(0, 10);
+            localStorage.setItem('spaceRunnerScores', JSON.stringify(highScores));
+            updateScoreDisplay();
+        }
+        
+        function updateScoreDisplay() {
+            const list = document.getElementById('scoreList');
+            if(highScores.length === 0) {
+                list.innerHTML = '<div style="color:#555">No scores yet</div>';
+            } else {
+                list.innerHTML = highScores.slice(0, 5).map((s, i) => 
+                    `<div class="scoreEntry">${i+1}. ${s.name} - ${s.time}s (${s.miles}mi)</div>`
+                ).join('');
+            }
+        }
+        
+        function restartGame() {
+            document.getElementById('endScreen').style.display = 'none';
+            startGame();
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
