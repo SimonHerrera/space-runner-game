@@ -7,12 +7,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
         
         body {
             overflow: hidden;
@@ -53,96 +48,60 @@
             justify-content: center;
             background: linear-gradient(180deg, #1a0a2e 0%, #0a0a1a 100%);
             z-index: 100;
-        }
-        
-        #endScreen {
-            display: none;
-        }
-        
-        h1 {
-            font-size: 48px;
-            color: #fff;
-            text-shadow: 0 0 30px #0ff, 0 0 60px #00f;
-            margin-bottom: 20px;
+            padding: 20px;
             text-align: center;
         }
         
-        .subtitle {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 40px;
+        #endScreen { display: none; }
+        
+        h1 {
+            font-size: 36px;
+            color: #fff;
+            text-shadow: 0 0 30px #0ff, 0 0 60px #00f;
+            margin-bottom: 15px;
         }
+        
+        .subtitle { color: #888; font-size: 14px; margin-bottom: 25px; }
         
         .instructions {
             color: #aaa;
             font-size: 12px;
-            text-align: center;
             max-width: 300px;
             line-height: 1.8;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
         }
         
         .btn {
             background: linear-gradient(180deg, #00d4ff 0%, #0066ff 100%);
             border: none;
-            padding: 20px 60px;
-            font-size: 20px;
+            padding: 18px 50px;
+            font-size: 18px;
             color: #fff;
             font-family: 'Orbitron', monospace;
             cursor: pointer;
             border-radius: 5px;
             text-transform: uppercase;
             box-shadow: 0 0 30px rgba(0, 200, 255, 0.5);
-            transition: all 0.3s;
         }
         
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 50px rgba(0, 200, 255, 0.8);
-        }
-        
-        .stats {
-            color: #0ff;
-            font-size: 24px;
-            margin: 10px 0;
-            text-shadow: 0 0 20px #0ff;
-        }
-        
-        .highlight {
-            color: #ff0;
-            font-size: 36px;
-        }
+        .stats { color: #0ff; font-size: 22px; margin: 8px 0; }
+        .highlight { color: #ff0; font-size: 32px; }
         
         #nameInput {
             background: rgba(0, 200, 255, 0.1);
             border: 2px solid #0ff;
-            padding: 15px 20px;
-            font-size: 24px;
+            padding: 12px 18px;
+            font-size: 22px;
             color: #fff;
             font-family: 'Orbitron', monospace;
             text-align: center;
-            width: 200px;
-            margin: 20px 0;
+            width: 180px;
+            margin: 15px 0;
             text-transform: uppercase;
-            maxlength: 8;
         }
         
-        #nameInput:focus {
-            outline: none;
-            border-color: #ff0;
-            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
-        }
-        
-        .highScores {
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
-        
-        .scoreEntry {
-            color: #0ff;
-            margin: 5px 0;
-        }
+        .highScores { margin-top: 25px; color: #888; font-size: 13px; }
+        .scoreEntry { color: #0ff; margin: 4px 0; }
         
         #levelIndicator {
             position: fixed;
@@ -150,21 +109,14 @@
             left: 50%;
             transform: translateX(-50%);
             color: #ff0;
-            font-size: 18px;
+            font-size: 16px;
             text-shadow: 0 0 15px #ff0;
             z-index: 10;
-            pointer-events: none;
         }
         
-        #levelIndicator.max {
-            color: #f00;
-            animation: pulse 0.5s infinite;
-        }
+        #levelIndicator.max { color: #f00; animation: pulse 0.5s infinite; }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -181,34 +133,35 @@
         <h1>🚀 SPACE RUNNER</h1>
         <div class="subtitle">USA EDITION</div>
         <div class="instructions">
-            Use ARROW KEYS or TOUCH/DRAG to steer<br>
-            Auto-shoot enabled<br>
-            Survive 90 seconds to win!<br><br>
+            Use ARROW KEYS or TOUCH/DRAG to steer<br><br>
+            Objects come at you - AVOID them!<br>
+            No shooting - just survive<br><br>
             Blue → Space transition at 10 seconds<br>
             Speed increases every 10 seconds<br>
-            Max speed at Level 9
+            Max speed at Level 9<br><br>
+            After 90s: Keep surviving!
         </div>
         <button class="btn" onclick="startGame()">LAUNCH</button>
     </div>
     
     <div id="endScreen">
-        <h1>MISSION COMPLETE</h1>
+        <h1>GAME OVER</h1>
         <div class="stats">TIME: <span id="finalTime" class="highlight">0</span>s</div>
         <div class="stats">MILES: <span id="finalMiles" class="highlight">0</span></div>
         
-        <div style="margin-top: 30px;">
-            <div style="color: #888; font-size: 14px;">ENTER YOUR CALLSIGN</div>
+        <div style="margin-top: 25px;">
+            <div style="color: #888; font-size: 13px;">ENTER YOUR CALLSIGN</div>
             <input type="text" id="nameInput" maxlength="8" placeholder="NAME">
         </div>
         
-        <button class="btn" onclick="saveScore()" style="margin-top: 20px;">SAVE</button>
+        <button class="btn" onclick="saveScore()" style="margin-top: 15px;">SAVE</button>
         
         <div class="highScores">
             <div>TOP PILOTS</div>
             <div id="scoreList"></div>
         </div>
         
-        <button class="btn" onclick="restartGame()" style="margin-top: 30px; padding: 15px 40px; font-size: 16px;">PLAY AGAIN</button>
+        <button class="btn" onclick="restartGame()" style="margin-top: 25px; padding: 12px 35px; font-size: 14px;">PLAY AGAIN</button>
     </div>
     
     <script>
@@ -220,40 +173,26 @@
         let gameTime = 0;
         let miles = 0;
         let level = 1;
-        let baseSpeed = 2;
+        let baseSpeed = 0.8;
         let currentSpeed = baseSpeed;
-        let lastSpeedIncrease = 0;
         
-        // Player
-        const player = {
-            x: 0,
-            y: 0,
-            width: 40,
-            height: 60,
-            vx: 0,
-            vy: 0,
-            thrust: 0.3,
-            maxSpeed: 8,
-            friction: 0.96
-        };
+        // Player (can move in X/Y within center area)
+        const player = { x: 0, y: 0, size: 25 };
         
         // Input
         const keys = {};
         let touchStart = null;
         let touchCurrent = null;
         
-        // Game objects
-        let stars = [];
+        // Game objects - obstacles coming toward player
         let obstacles = [];
-        let bullets = [];
+        let stars = [];
         let particles = [];
         
-        // Colors
-        let skyColor = { r: 100, g: 150, b: 255 };
-        let targetSkyColor = { r: 100, g: 150, b: 255 };
+        let skyColor = { r: 135, g: 206, b: 235 };
+        let targetSkyColor = { r: 135, g: 206, b: 235 };
         
-        // High scores
-        let highScores = JSON.parse(localStorage.getItem('spaceRunnerScores') || '[]');
+        let highScores = JSON.parse(localStorage.getItem('spaceRunnerScores2') || '[]');
         
         function resize() {
             W = canvas.width = window.innerWidth;
@@ -266,14 +205,12 @@
             resize();
             window.addEventListener('resize', resize);
             
-            // Keyboard
             window.addEventListener('keydown', e => {
                 keys[e.key] = true;
                 if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
             });
             window.addEventListener('keyup', e => keys[e.key] = false);
             
-            // Touch
             canvas.addEventListener('touchstart', e => {
                 e.preventDefault();
                 touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -286,27 +223,14 @@
                     touchCurrent.y = e.touches[0].clientY;
                 }
             });
-            canvas.addEventListener('touchend', () => {
-                touchStart = null;
-                touchCurrent = null;
-            });
+            canvas.addEventListener('touchend', () => { touchStart = null; touchCurrent = null; });
             
-            // Mouse
-            canvas.addEventListener('mousemove', e => {
-                if(touchCurrent) {
-                    touchCurrent.x = e.clientX;
-                    touchCurrent.y = e.clientY;
-                }
-            });
-            
-            // Generate initial stars
-            for(let i = 0; i < 200; i++) {
+            // Create initial stars
+            for(let i = 0; i < 150; i++) {
                 stars.push({
                     x: Math.random() * W,
                     y: Math.random() * H,
-                    size: Math.random() * 2 + 0.5,
-                    speed: Math.random() * 0.5 + 0.2,
-                    brightness: Math.random()
+                    z: Math.random() * 3 + 0.5  // depth
                 });
             }
             
@@ -320,15 +244,11 @@
             miles = 0;
             level = 1;
             currentSpeed = baseSpeed;
-            lastSpeedIncrease = 0;
             obstacles = [];
-            bullets = [];
             particles = [];
             player.x = W / 2;
             player.y = H / 2;
-            player.vx = 0;
-            player.vy = 0;
-            skyColor = { r: 135, g: 206, b: 235 }; // Day sky blue
+            skyColor = { r: 135, g: 206, b: 235 };
             targetSkyColor = { r: 135, g: 206, b: 235 };
             
             requestAnimationFrame(gameLoop);
@@ -340,78 +260,54 @@
             const dt = 1/60;
             gameTime += dt;
             
-            // Level up every 10 seconds
-            if(gameTime >= 10 && level < 9) {
+            // Level up every 10 seconds, up to 90s (level 9)
+            if(gameTime >= 10 && gameTime <= 90) {
                 const newLevel = Math.floor(gameTime / 10) + 1;
                 if(newLevel > level && newLevel <= 9) {
                     level = newLevel;
-                    currentSpeed = baseSpeed * Math.pow(1.1, level - 1);
-                    lastSpeedIncrease = gameTime;
+                    currentSpeed = baseSpeed * Math.pow(1.15, level - 1);
                     
-                    // Visual feedback
-                    for(let i = 0; i < 20; i++) {
+                    // Visual flash
+                    for(let i = 0; i < 15; i++) {
                         particles.push({
-                            x: player.x,
-                            y: player.y,
-                            vx: (Math.random() - 0.5) * 10,
-                            vy: (Math.random() - 0.5) * 10,
-                            life: 1,
-                            color: '#ff0'
+                            x: player.x, y: player.y,
+                            vx: (Math.random() - 0.5) * 8,
+                            vy: (Math.random() - 0.5) * 8,
+                            life: 1, color: '#ff0'
                         });
                     }
                 }
             }
             
-            // Level 9 = max speed
-            if(level === 9) {
-                currentSpeed = baseSpeed * Math.pow(1.1, 8);
+            // After 90 seconds, stay at max speed (survival mode)
+            if(gameTime >= 90) {
+                level = 10; // special "survival" indicator
+                currentSpeed = baseSpeed * Math.pow(1.15, 8);
                 document.getElementById('levelIndicator').classList.add('max');
-                document.getElementById('levelIndicator').textContent = 'MAX SPEED';
+                document.getElementById('levelIndicator').textContent = 'SURVIVE!';
             } else {
                 document.getElementById('levelIndicator').classList.remove('max');
                 document.getElementById('levelIndicator').textContent = 'LEVEL ' + level;
             }
             
             // Track miles
-            if(gameTime - lastSpeedIncrease >= 10 || lastSpeedIncrease === 0) {
-                miles += Math.floor(currentSpeed * 10);
-            }
+            miles += Math.floor(currentSpeed * 5);
             
             // Sky transition after 10 seconds
-            if(gameTime > 10) {
-                targetSkyColor = { r: 5, g: 5, b: 20 }; // Space dark
-            }
+            if(gameTime > 10) targetSkyColor = { r: 5, g: 5, b: 20 };
             
-            // Smooth color transition
             skyColor.r += (targetSkyColor.r - skyColor.r) * 0.01;
             skyColor.g += (targetSkyColor.g - skyColor.g) * 0.01;
             skyColor.b += (targetSkyColor.b - skyColor.b) * 0.01;
             
-            // Update player
             updatePlayer();
-            
-            // Update stars
             updateStars();
-            
-            // Spawn obstacles
             spawnObstacles();
-            
-            // Update obstacles
             updateObstacles();
-            
-            // Update bullets
-            updateBullets();
-            
-            // Update particles
             updateParticles();
-            
-            // Collision detection
             checkCollisions();
-            
-            // Draw
             draw();
             
-            // UI
             document.getElementById('timeDisplay').textContent = gameTime.toFixed(1);
             document.getElementById('milesDisplay').textContent = miles;
             
@@ -419,185 +315,92 @@
         }
         
         function updatePlayer() {
-            // Keyboard input
-            if(keys['ArrowLeft'] || keys['a']) player.vx -= player.thrust;
-            if(keys['ArrowRight'] || keys['d']) player.vx += player.thrust;
-            if(keys['ArrowUp'] || keys['w']) player.vy -= player.thrust;
-            if(keys['ArrowDown'] || keys['s']) player.vy += player.thrust;
+            const thrust = 6;
             
-            // Touch/mouse input
+            if(keys['ArrowLeft'] || keys['a']) player.x -= thrust;
+            if(keys['ArrowRight'] || keys['d']) player.x += thrust;
+            if(keys['ArrowUp'] || keys['w']) player.y -= thrust;
+            if(keys['ArrowDown'] || keys['s']) player.y += thrust;
+            
             if(touchStart && touchCurrent) {
                 const dx = touchCurrent.x - player.x;
                 const dy = touchCurrent.y - player.y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist > 10) {
-                    player.vx += (dx / dist) * player.thrust;
-                    player.vy += (dy / dist) * player.thrust;
+                if(dist > 5) {
+                    player.x += (dx / dist) * thrust;
+                    player.y += (dy / dist) * thrust;
                 }
-            }
-            
-            // Apply friction
-            player.vx *= player.friction;
-            player.vy *= player.friction;
-            
-            // Clamp speed
-            const speed = Math.sqrt(player.vx*player.vx + player.vy*player.vy);
-            if(speed > player.maxSpeed) {
-                player.vx = (player.vx / speed) * player.maxSpeed;
-                player.vy = (player.vy / speed) * player.maxSpeed;
             }
             
             // Constrain to middle 30% of screen
             const marginX = W * 0.35;
             const marginY = H * 0.35;
-            player.x = Math.max(marginX, Math.min(W - marginX, player.x + player.vx));
-            player.y = Math.max(marginY, Math.min(H - marginY, player.y + player.vy));
-            
-            // Auto-shoot
-            if(Math.random() < 0.1) {
-                bullets.push({
-                    x: player.x,
-                    y: player.y - player.height/2,
-                    vy: -15,
-                    life: 60
-                });
-            }
+            player.x = Math.max(marginX, Math.min(W - marginX, player.x));
+            player.y = Math.max(marginY, Math.min(H - marginY, player.y));
         }
         
         function updateStars() {
             stars.forEach(star => {
-                star.y += currentSpeed * star.speed;
-                if(star.y > H) {
-                    star.y = 0;
+                star.z -= currentSpeed * 0.02;
+                if(star.z <= 0) {
+                    star.z = 3 + Math.random() * 2;
                     star.x = Math.random() * W;
+                    star.y = Math.random() * H;
                 }
             });
         }
         
         function spawnObstacles() {
-            if(Math.random() < 0.02 + level * 0.005) {
-                const side = Math.floor(Math.random() * 4);
-                let x, y, vx, vy, type, size;
-                
-                // Don't spawn in middle 30%
-                const safeMarginX = W * 0.3;
-                const safeMarginY = H * 0.3;
-                
-                switch(side) {
-                    case 0: // Top
-                        x = Math.random() * W;
-                        y = -50;
-                        break;
-                    case 1: // Right
-                        x = W + 50;
-                        y = safeMarginY + Math.random() * (H * 0.4);
-                        break;
-                    case 2: // Bottom
-                        x = Math.random() * W;
-                        y = H + 50;
-                        break;
-                    case 3: // Left
-                        x = -50;
-                        y = safeMarginY + Math.random() * (H * 0.4);
-                        break;
-                }
-                
-                // Type based on game progress
-                const rand = Math.random();
-                if(gameTime < 20) {
-                    type = 'asteroid';
-                    size = 20 + Math.random() * 30;
-                } else if(gameTime < 50) {
-                    type = rand < 0.7 ? 'asteroid' : 'planet';
-                    size = rand < 0.7 ? 20 + Math.random() * 30 : 40 + Math.random() * 40;
-                } else {
-                    if(rand < 0.5) type = 'planet';
-                    else if(rand < 0.8) type = 'asteroid';
-                    else type = 'blackhole';
-                    size = type === 'blackhole' ? 30 + Math.random() * 20 : 40 + Math.random() * 50;
-                }
-                
-                // Velocity towards center-ish
-                const angle = Math.atan2(H/2 - y, W/2 - x) + (Math.random() - 0.5) * 0.5;
-                const speed = currentSpeed * (0.5 + Math.random() * 0.5);
+            // Spawn rate increases with level
+            const spawnRate = 0.015 + level * 0.003;
+            if(Math.random() < spawnRate) {
+                // Start far away (small, centered-ish)
+                const spreadX = (Math.random() - 0.5) * W * 0.8;
+                const spreadY = (Math.random() - 0.5) * H * 0.6;
                 
                 obstacles.push({
-                    x, y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    type,
-                    size,
-                    rotation: 0,
-                    rotationSpeed: (Math.random() - 0.5) * 0.1
+                    x: W/2 + spreadX,
+                    y: H/2 + spreadY,
+                    z: 50,  // start far away
+                    type: Math.random() < 0.2 ? 'planet' : (Math.random() < 0.15 ? 'blackhole' : 'asteroid'),
+                    size: 15 + Math.random() * 25  // actual size when close
                 });
             }
         }
         
         function updateObstacles() {
             obstacles.forEach(obs => {
-                obs.x += obs.vx + currentSpeed * 0.5;
-                obs.y += obs.vy;
-                obs.rotation += obs.rotationSpeed;
+                obs.z -= currentSpeed * 0.5;  // comes toward player
             });
             
-            // Remove off-screen
-            obstacles = obstacles.filter(obs => 
-                obs.x > -100 && obs.x < W + 100 && 
-                obs.y > -100 && obs.y < H + 100
-            );
-        }
-        
-        function updateBullets() {
-            bullets.forEach(b => {
-                b.y += b.vy;
-                b.life--;
-            });
-            bullets = bullets.filter(b => b.life > 0 && b.y > -20);
+            // Remove obstacles that passed the player
+            obstacles = obstacles.filter(obs => obs.z > -5);
         }
         
         function updateParticles() {
             particles.forEach(p => {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.02;
+                p.life -= 0.03;
             });
             particles = particles.filter(p => p.life > 0);
         }
         
         function checkCollisions() {
-            // Bullet vs obstacle
-            bullets.forEach((bullet, bi) => {
-                obstacles.forEach((obs, oi) => {
-                    const dx = bullet.x - obs.x;
-                    const dy = bullet.y - obs.y;
+            const playerZ = 0; // player is at z=0
+            
+            obstacles.forEach(obs => {
+                if(obs.z < 3 && obs.z > -2) {  // close to player
+                    const dx = player.x - obs.x;
+                    const dy = player.y - obs.y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
                     
-                    if(dist < obs.size) {
-                        // Explosion particles
-                        for(let i = 0; i < 10; i++) {
-                            particles.push({
-                                x: obs.x,
-                                y: obs.y,
-                                vx: (Math.random() - 0.5) * 5,
-                                vy: (Math.random() - 0.5) * 5,
-                                life: 1,
-                                color: obs.type === 'blackhole' ? '#f0f' : '#fa0'
-                            });
-                        }
-                        obstacles.splice(oi, 1);
-                        bullets.splice(bi, 1);
+                    // Collision threshold based on obstacle size
+                    const collisionDist = (obs.size / 2) * (1 - obs.z/50) + player.size/2;
+                    
+                    if(dist < collisionDist) {
+                        endGame();
                     }
-                });
-            });
-            
-            // Player vs obstacle
-            obstacles.forEach(obs => {
-                const dx = player.x - obs.x;
-                const dy = player.y - obs.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if(dist < obs.size/2 + 15) {
-                    endGame();
                 }
             });
         }
@@ -607,87 +410,78 @@
             ctx.fillStyle = `rgb(${Math.floor(skyColor.r)}, ${Math.floor(skyColor.g)}, ${Math.floor(skyColor.b)})`;
             ctx.fillRect(0, 0, W, H);
             
-            // Stars
-            if(gameTime > 10) {
-                stars.forEach(star => {
-                    const alpha = 0.5 + Math.sin(Date.now() * 0.001 + star.brightness * 10) * 0.5;
+            // Stars (3D perspective)
+            stars.forEach(star => {
+                const perspective = 1 / star.z;
+                const sx = (star.x - W/2) * perspective * 2 + W/2;
+                const sy = (star.y - H/2) * perspective * 2 + H/2;
+                const size = (1 - star.z/5) * 2;
+                
+                if(star.z < 4) {
+                    const alpha = 1 - star.z/4;
                     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
                     ctx.beginPath();
-                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.arc(sx, sy, Math.max(0.5, size), 0, Math.PI * 2);
                     ctx.fill();
-                });
-            }
+                }
+            });
             
             // Particles
             particles.forEach(p => {
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = p.life;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.globalAlpha = 1;
             });
             
-            // Bullets
-            ctx.fillStyle = '#ff0';
-            bullets.forEach(b => {
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            });
+            // Obstacles (sorted by z for proper depth)
+            const sortedObs = [...obstacles].sort((a, b) => b.z - a.z);
             
-            // Obstacles
-            obstacles.forEach(obs => {
-                ctx.save();
-                ctx.translate(obs.x, obs.y);
-                ctx.rotate(obs.rotation);
+            sortedObs.forEach(obs => {
+                const perspective = 1 / Math.max(0.1, obs.z);
+                const scale = (50 - obs.z) / 50;  // grows as it gets closer
+                const apparentSize = obs.size * scale;
                 
-                if(obs.type === 'planet') {
-                    // Planet
-                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, obs.size);
-                    gradient.addColorStop(0, '#4a4');
-                    gradient.addColorStop(0.5, '#262');
-                    gradient.addColorStop(1, '#141');
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, obs.size/2, 0, Math.PI * 2);
-                    ctx.fill();
+                const sx = (obs.x - W/2) * perspective * 3 + W/2;
+                const sy = (obs.y - H/2) * perspective * 3 + H/2;
+                
+                if(apparentSize > 0.5) {
+                    ctx.save();
                     
-                    // Craters
-                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                    ctx.beginPath();
-                    ctx.arc(obs.size/4, -obs.size/6, obs.size/6, 0, Math.PI*2);
-                    ctx.fill();
-                } else if(obs.type === 'blackhole') {
-                    // Black hole with event horizon
-                    ctx.fillStyle = '#000';
-                    ctx.beginPath();
-                    ctx.arc(0, 0, obs.size/2, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.strokeStyle = '#f0f';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, obs.size/2 + 5, 0, Math.PI * 2);
-                    ctx.stroke();
-                } else {
-                    // Asteroid
-                    ctx.fillStyle = '#654';
-                    ctx.beginPath();
-                    ctx.moveTo(obs.size/2, 0);
-                    for(let i = 1; i < 7; i++) {
-                        const angle = (i / 6) * Math.PI * 2;
-                        const r = obs.size/2 * (0.7 + Math.sin(i * 3) * 0.3);
-                        ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+                    if(obs.type === 'planet') {
+                        const gradient = ctx.createRadialGradient(sx - apparentSize/4, sy - apparentSize/4, 0, sx, sy, apparentSize/2);
+                        gradient.addColorStop(0, '#6a6');
+                        gradient.addColorStop(0.6, '#353');
+                        gradient.addColorStop(1, '#131');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, apparentSize/2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if(obs.type === 'blackhole') {
+                        ctx.fillStyle = '#000';
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, apparentSize/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = '#f0f';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, apparentSize/2 + 4, 0, Math.PI * 2);
+                        ctx.stroke();
+                    } else {
+                        // Asteroid
+                        ctx.fillStyle = '#765';
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, apparentSize/2, 0, Math.PI * 2);
+                        ctx.fill();
                     }
-                    ctx.closePath();
-                    ctx.fill();
+                    
+                    ctx.restore();
                 }
-                
-                ctx.restore();
             });
             
-            // Player rocket
+            // Player rocket (always on top)
             drawRocket(player.x, player.y);
         }
         
@@ -696,53 +490,53 @@
             ctx.translate(x, y);
             
             // Engine flame
-            const flameHeight = 15 + Math.random() * 10;
-            const gradient = ctx.createLinearGradient(0, 15, 0, 15 + flameHeight);
+            const flameHeight = 12 + Math.random() * 8;
+            const gradient = ctx.createLinearGradient(0, 12, 0, 12 + flameHeight);
             gradient.addColorStop(0, '#ff0');
             gradient.addColorStop(0.5, '#f80');
             gradient.addColorStop(1, 'transparent');
             ctx.fillStyle = gradient;
             ctx.beginPath();
-            ctx.moveTo(-8, 15);
-            ctx.lineTo(0, 15 + flameHeight);
-            ctx.lineTo(8, 15);
+            ctx.moveTo(-6, 12);
+            ctx.lineTo(0, 12 + flameHeight);
+            ctx.lineTo(6, 12);
             ctx.closePath();
             ctx.fill();
             
             // Body
             ctx.fillStyle = '#ddd';
             ctx.beginPath();
-            ctx.moveTo(0, -30);
-            ctx.lineTo(15, 15);
-            ctx.lineTo(-15, 15);
+            ctx.moveTo(0, -25);
+            ctx.lineTo(12, 12);
+            ctx.lineTo(-12, 12);
             ctx.closePath();
             ctx.fill();
             
             // USA text
             ctx.fillStyle = '#0066cc';
-            ctx.font = 'bold 10px Orbitron';
+            ctx.font = 'bold 8px Orbitron';
             ctx.textAlign = 'center';
-            ctx.fillText('USA', 0, 0);
+            ctx.fillText('USA', 0, -2);
             
             // Cockpit
             ctx.fillStyle = '#0af';
             ctx.beginPath();
-            ctx.arc(0, -12, 8, 0, Math.PI * 2);
+            ctx.arc(0, -10, 6, 0, Math.PI * 2);
             ctx.fill();
             
             // Fins
             ctx.fillStyle = '#c00';
             ctx.beginPath();
-            ctx.moveTo(-15, 10);
-            ctx.lineTo(-25, 20);
-            ctx.lineTo(-15, 15);
+            ctx.moveTo(-12, 8);
+            ctx.lineTo(-20, 16);
+            ctx.lineTo(-12, 12);
             ctx.closePath();
             ctx.fill();
             
             ctx.beginPath();
-            ctx.moveTo(15, 10);
-            ctx.lineTo(25, 20);
-            ctx.lineTo(15, 15);
+            ctx.moveTo(12, 8);
+            ctx.lineTo(20, 16);
+            ctx.lineTo(12, 12);
             ctx.closePath();
             ctx.fill();
             
@@ -764,7 +558,7 @@
             highScores.push(score);
             highScores.sort((a, b) => parseFloat(b.time) - parseFloat(a.time));
             highScores = highScores.slice(0, 10);
-            localStorage.setItem('spaceRunnerScores', JSON.stringify(highScores));
+            localStorage.setItem('spaceRunnerScores2', JSON.stringify(highScores));
             updateScoreDisplay();
         }
         
@@ -784,7 +578,6 @@
             startGame();
         }
         
-        // Start
         init();
     </script>
 </body>
