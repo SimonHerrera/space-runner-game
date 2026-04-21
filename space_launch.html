@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Launch Survival</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            touch-action: none;
+            color: #FFF;
+        }
+
+        body.playing { cursor: none !important; }
+
+        #gameCanvas { display: block; width: 100%; height: 100%; }
+
+        #ui-layer {
+            position: absolute; top: 20px; left: 0; width: 100%; padding: 0;
+            box-sizing: border-box; display: flex; justify-content: center; gap: 15vw; 
+            text-shadow: 3px 3px 0 #000; font-weight: bold; font-size: 3.5rem; 
+            pointer-events: none; z-index: 10;
+        }
+
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-box span:first-child { font-size: 1.2rem; opacity: 0.8; margin-bottom: -5px; }
+
+        #steering-container {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 150px; height: 80px; background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px;
+            pointer-events: none; z-index: 10; overflow: hidden;
+        }
+
+        .crosshair-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.2); }
+        .crosshair-v { position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(255,255,255,0.2); }
+
+        #steering-dot {
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
+            background: #FFF; border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px #FFF; transition: left 0.1s linear, top 0.1s linear;
+        }
+
+        #menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(2px);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 20;
+        }
+
+        h1 { font-size: 3rem; margin-bottom: 5px; text-align: center; }
+        .instructions { font-size: 1.2rem; text-align: center; max-width: 600px; margin-bottom: 20px; line-height: 1.4; color: #CCC; }
+        
+        #gameOverStats { font-size: 2rem; text-align: center; margin-bottom: 20px; }
+
+        .leaderboard { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; width: 100%; }
+        .leaderboard h2 { margin: 0 0 10px 0; font-size: 1.5rem; text-decoration: underline; }
+        .score-row { margin: 5px 0; font-weight: bold; font-size: 1.5rem; } 
+        .score-1st { font-size: 2.5rem; color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+        button {
+            padding: 15px 40px; font-size: 1.5rem; font-family: inherit; font-weight: bold;
+            background: white; color: black; border: 4px solid #555; border-radius: 10px;
+            cursor: pointer; text-transform: uppercase;
+        }
+        button:active { transform: scale(0.95); }
+
+        #warning {
+            position: absolute; top: 30%; width: 100%; text-align: center; color: red;
+            font-size: 3rem; font-weight: bold; text-shadow: 2px 2px 0 white;
+            opacity: 0; pointer-events: none; z-index: 15; transition: opacity 0.5s;
+        }
+        
+        @media (max-width: 800px) {
+            #ui-layer { font-size: 2.5rem; gap: 10vw; } h1 { font-size: 2rem; } #warning { font-size: 2rem; }
+            #gameOverStats { font-size: 1.5rem; } .score-1st { font-size: 2rem; } .score-row { font-size: 1.2rem; }
+            .instructions { font-size: 1rem; padding: 0 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="stat-box"><span>DISTANCE</span><span id="distance">0mi</span></div>
+        <div class="stat-box"><span>TIME</span><span id="time">0s</span></div>
+    </div>
+
+    <div id="steering-container">
+        <div class="crosshair-h"></div>
+        <div class="crosshair-v"></div>
+        <div id="steering-dot"></div>
+    </div>
+
+    <div id="warning">⚠ ENTERING OUTER SPACE ⚠</div>
+
+    <div id="menu">
+        <h1 id="menuTitle">SPACE LAUNCH</h1>
+        <p class="instructions" id="menuDesc">
+            <strong>Objective:</strong> See how long and far you can survive as your ship races away from Earth.<br><br>
+            Use Mouse, Touch, or Arrow Keys to steer.<br>
+            <em>Press 'ESC' at any time to abort launch.</em>
+        </p>
+        
+        <div id="gameOverStats" style="display:none;">
+            <div>Time: <span id="finalTime"></span></div>
+            <div>Distance: <span id="finalDistance"></span></div>
+        </div>
+        <div class="leaderboard" id="leaderboardContainer" style="display:none;">
+            <h2>TOP 5 FLIGHTS</h2>
+            <div id="leaderboardList"></div>
+        </div>
+        <button id="startBtn">LAUNCH</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const menu = document.getElementById('menu');
+        const startBtn = document.getElementById('startBtn');
+        const warningEl = document.getElementById('warning');
+        const steeringDot = document.getElementById('steering-dot');
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Game State Variables
+        let isPlaying = false;
+        let isReplaying = false;
+        let animationId;
+        let miles = 0;
+        let startTime = 0;
+        let elapsed = 0;
+        let preciseElapsed = 0;
+        let lastSpeedUpTime = 0;
+        let baseSpeed = 20; 
+        let currentSpeed = baseSpeed;
+
+        const focalLength = 300;
+        let playerTargetX = 0; let playerTargetY = 0;
+        let playerX = 0; let playerY = 0; 
+        let visualShipX = 0; let visualShipY = 0; 
+        let tilt = 0;
+        const boundsX = 4000; const boundsY = 1500; 
+
+        let objects = [];
+        let stars = [];
+
+        // Input Handling
+        let keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false };
+        let useMouse = false;
+        let mouseInputX = 0; let mouseInputY = 0;
+
+        window.addEventListener('keydown', (e) => { 
+            if(keys.hasOwnProperty(e.code)) { keys[e.code] = true; useMouse = false; }
+            if(e.code === 'Escape' && isPlaying) abortGame();
+        });
+        window.addEventListener('keyup', (e) => { 
+            if(keys.hasOwnProperty(e.code)) keys[e.code] = false; 
+        });
+
+        function handlePointer(clientX, clientY) {
+            useMouse = true;
+            const centerX = canvas.width / 2; const centerY = canvas.height / 2;
+            mouseInputX = Math.max(-1, Math.min(1, (clientX - centerX) / (canvas.width / 3)));
+            mouseInputY = Math.max(-1, Math.min(1, (clientY - centerY) / (canvas.height / 3)));
+        }
+
+        window.addEventListener('mousemove', (e) => { if (isPlaying) handlePointer(e.clientX, e.clientY); });
+        window.addEventListener('touchmove', (e) => {
+            if (isPlaying) { e.preventDefault(); handlePointer(e.touches[0].clientX, e.touches[0].clientY); }
+        }, { passive: false });
+
+        let highScores = JSON.parse(localStorage.getItem('spaceGameScores')) || [];
+        function updateHighScores(newScore) {
+            highScores.push(newScore); highScores.sort((a, b) => b - a); highScores = highScores.slice(0, 5);
+            localStorage.setItem('spaceGameScores', JSON.stringify(highScores));
+        }
+
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboardList'); list.innerHTML = '';
+            highScores.forEach((score, index) => {
+                const row = document.createElement('div');
+                row.className = index === 0 ? 'score-row score-1st' : 'score-row';
+                row.innerText = `${index + 1}. ${score} mi`; list.appendChild(row);
+            });
+        }
+
+        // --- AUDIO ENGINE ---
+        let audioCtx; let engineOscillator; let engineGain;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        
+        function startEngineSound() {
+            engineOscillator = audioCtx.createOscillator(); engineGain = audioCtx.createGain();
+            engineOscillator.type = 'sawtooth'; engineOscillator.frequency.value = 40; 
+            engineGain.gain.value = 0.1; engineOscillator.connect(engineGain);
+            engineGain.connect(audioCtx.destination); engineOscillator.start();
+        }
+        
+        function updateEngineSound() {
+            if (engineOscillator && isPlaying) engineOscillator.frequency.value = 40 + (currentSpeed - 20) * 0.5;
+        }
+
+        function playExplosion() {
+            if (!audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * 1.5; 
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1; 
+            const noiseSource = audioCtx.createBufferSource(); noiseSource.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 1000;
+            const gainNode = audioCtx.createGain(); gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+            noiseSource.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination); noiseSource.start();
+        }
+
+        function createObject(zPos) {
+            let type = 'asteroid'; 
+            let x = (Math.random() - 0.5) * 12000;
+            let y = (Math.random() - 0.5) * 4000;
+            let size = 50;
+
+            if (preciseElapsed < 4) {
+                type = Math.random() > 0.5 ? 'airplane' : 'helicopter';
+            } else {
+                const rand = Math.random();
+                if (rand > 0.95) type = 'blackhole'; 
+                else if (rand > 0.94) type = 'sun'; 
+                else if (rand > 0.79) type = 'planet'; 
+                else type = 'asteroid'; 
+            }
+
+            if (type === 'airplane') size = 40;
+            if (type === 'helicopter') size = 35;
+            if (type === 'asteroid') size = Math.random() * 50 + 20;
+            if (type === 'planet') size = Math.random() * 300 + 100;
+            if (type === 'sun') size = Math.random() * 200 + 200; 
+            if (type === 'blackhole') size = 150;
+
+            if (type === 'planet' || type === 'sun' || type === 'blackhole') {
+                for (let obj of objects) {
+                    if (obj.type === 'planet' || obj.type === 'sun' || obj.type === 'blackhole') {
+                        let dx = obj.x - x;
+                        let dy = obj.y - y;
+                        let dz = obj.z - zPos;
+                        let distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                        if (distance < (size + obj.size + 1500)) {
+                            type = 'asteroid';
+                            size = Math.random() * 50 + 20;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const planetColors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#8A2BE2', '#FFFFFF'];
+            let color = '#FFFFFF';
+            if (type === 'planet') color = planetColors[Math.floor(Math.random() * planetColors.length)];
+            else if (type === 'asteroid') color = '#AAAAAA';
+            else if (type === 'sun') color = '#FFD700';
+
+            return { type, size, color, x, y, z: zPos };
+        }
+
+        function initStars() {
+            stars = [];
+            for(let i=0; i<300; i++) stars.push({ x: (Math.random() - 0.5) * 12000, y: (Math.random() - 0.5) * 4000, z: Math.random() * 4000 });
+        }
+
+        function drawEntity(ctx, type, color, size, screenX, screenY, scale) {
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            
+            let renderScale = Math.max(1.5 / size, scale);
+            ctx.scale(renderScale, renderScale);
+
+            if (type === 'airplane') {
+                ctx.fillStyle = '#FFF'; ctx.fillRect(-20, -5, 40, 10); ctx.fillRect(-5, -20, 10, 40); 
+                ctx.fillStyle = 'red'; ctx.fillRect(15, -5, 5, 5); 
+            } else if (type === 'helicopter') {
+                ctx.fillStyle = '#DDD'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillRect(-5, 0, 10, 30); ctx.fillStyle = '#FFF'; ctx.fillRect(-30, -15, 60, 2); 
+            } else if (type === 'asteroid') {
+                ctx.strokeStyle = '#FFF'; ctx.fillStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+                for(let i=0; i<8; i++) {
+                    let angle = (i/8) * Math.PI * 2; let r = size * (0.8 + (Math.sin(angle * i)*0.2)); 
+                    if(i===0) ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r); else ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
+                }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else if (type === 'planet') {
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                if(size % 2 === 0 || type === 'planet') {
+                    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 15; ctx.beginPath();
+                    ctx.ellipse(0, 0, size * 1.5, size * 0.4, Math.PI/8, 0, Math.PI*2); ctx.stroke();
+                }
+            } else if (type === 'sun') {
+                ctx.fillStyle = color; 
+                ctx.shadowBlur = 50; ctx.shadowColor = '#FFA500';
+                ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+            } else if (type === 'blackhole') {
+                ctx.fillStyle = '#000'; ctx.shadowBlur = 30; ctx.shadowColor = '#8A2BE2';
+                ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(138, 43, 226, 0.3)'; ctx.lineWidth = 5; ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawShip(ctx, screenX, screenY, tiltAngle) {
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.rotate(tiltAngle);
+            ctx.scale(0.6, 0.6); 
+
+            const hullCol = '#FFF'; const boosterCol = '#111'; const cockpitCol = '#33F'; const engineCol = '#F22';
+
+            ctx.fillStyle = hullCol; ctx.beginPath();
+            ctx.moveTo(0, -50); ctx.lineTo(20, 20); ctx.lineTo(-20, 20); ctx.closePath(); ctx.fill();
+
+            ctx.fillStyle = boosterCol; ctx.beginPath(); ctx.ellipse(0, 20, 20, 8, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = cockpitCol; ctx.beginPath(); ctx.ellipse(0, -30, 6, 12, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = boosterCol; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('USA', 0, -10);
+
+            ctx.fillStyle = engineCol; ctx.strokeStyle = '#900'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.ellipse(-12, 22, 5, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(0, 25, 6, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(12, 22, 5, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            const flameIntensity = Math.random();
+            ctx.fillStyle = `rgba(255, 165, 0, ${0.5 + flameIntensity * 0.5})`; 
+            ctx.beginPath(); ctx.moveTo(-18, 25); ctx.lineTo(18, 25); ctx.lineTo(0, 25 + flameIntensity * 60 + 20); ctx.closePath(); ctx.fill();
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + flameIntensity * 0.3})`;
+            ctx.beginPath(); ctx.ellipse(0, 25, 6, flameIntensity * 30 + 10, 0, 0, Math.PI*2); ctx.fill();
+
+            ctx.restore();
+        }
+
+        let historyBuffer = []; let replayFrameIndex = 0; let replayExploding = false;
+        let replayExplosionTimer = 0; let replayParticles = []; let hitObjectType = ''; 
+        let cachedHazeRatio = 0; 
+
+        function saveHistoryFrame(hazeRatio) {
+            if (historyBuffer.length >= 75) historyBuffer.shift(); 
+            historyBuffer.push({
+                hazeRatio, miles, px: playerX, py: playerY, vx: visualShipX, vy: visualShipY, tilt: tilt,
+                objs: objects.map(o => ({...o})), strs: stars.map(s => ({...s}))
+            });
+        }
+
+        function abortGame() {
+            isPlaying = false; isReplaying = false; document.body.classList.remove('playing'); warningEl.style.opacity = 0;
+            if (engineOscillator) { engineOscillator.stop(); engineOscillator.disconnect(); }
+            menu.style.display = 'flex'; document.getElementById('menuTitle').innerText = 'SPACE LAUNCH';
+            document.getElementById('menuDesc').style.display = 'block'; document.getElementById('gameOverStats').style.display = 'none';
+            document.getElementById('leaderboardContainer').style.display = 'none'; startBtn.innerText = 'LAUNCH';
+        }
+
+        function gameOver(impactObject) {
+            isPlaying = false; isReplaying = true; replayFrameIndex = 0; replayExploding = false;
+            hitObjectType = impactObject.type; 
+            document.body.classList.remove('playing'); warningEl.style.opacity = 0;
+
+            if (engineOscillator) { engineOscillator.stop(); engineOscillator.disconnect(); }
+            playExplosion();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            updateHighScores(miles); renderLeaderboard();
+
+            document.getElementById('finalTime').innerText = `${elapsed}s`; document.getElementById('finalDistance').innerText = `${miles}mi`;
+
+            setTimeout(() => {
+                menu.style.display = 'flex'; document.getElementById('menuTitle').innerText = 'SHIP DESTROYED';
+                document.getElementById('menuDesc').style.display = 'none'; document.getElementById('gameOverStats').style.display = 'block';
+                document.getElementById('leaderboardContainer').style.display = 'flex'; startBtn.innerText = 'TRY AGAIN';
+            }, 1000);
+        }
+
+        function renderReplay() {
+            if (historyBuffer.length === 0) return;
+            let frameIdx = replayExploding ? historyBuffer.length - 1 : Math.floor(replayFrameIndex);
+            let frame = historyBuffer[frameIdx];
+            
+            let r = Math.floor(135 * (1 - frame.hazeRatio));
+            let g = Math.floor(206 * (1 - frame.hazeRatio));
+            let b = Math.floor(235 * (1 - frame.hazeRatio));
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (frame.hazeRatio < 1) {
+                let hazeOpacity = 0.4 * (1 - frame.hazeRatio);
+                ctx.fillStyle = `rgba(255, 255, 255, ${hazeOpacity})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            const cx = canvas.width / 2; const cy = canvas.height / 2;
+
+            ctx.fillStyle = '#FFF';
+            frame.strs.forEach(s => {
+                let starOpacity = frame.hazeRatio < 1 ? 0.2 + (0.8 * frame.hazeRatio) : 1;
+                const scale = focalLength / s.z;
+                const screenX = cx + (s.x - frame.px) * scale; const screenY = cy + (s.y - frame.py) * scale;
+                if (screenX > 0 && screenX < canvas.width && screenY > 0 && screenY < canvas.height) {
+                    let starSize = Math.max(1, scale * 4);
+                    ctx.globalAlpha = starOpacity; ctx.fillRect(screenX, screenY, starSize, starSize); ctx.globalAlpha = 1;
+                }
+            });
+
+            let sortedObjs = [...frame.objs].sort((a, b) => b.z - a.z);
+            sortedObjs.forEach(obj => {
+                const scale = focalLength / obj.z;
+                const screenX = cx + (obj.x - frame.px) * scale; const screenY = cy + (obj.y - frame.py) * scale;
+                drawEntity(ctx, obj.type, obj.color, obj.size, screenX, screenY, scale);
+            });
+
+            const shipScreenX = cx + frame.vx; const shipScreenY = (canvas.height * 0.6) + frame.vy;
+
+            if (!replayExploding) {
+                drawShip(ctx, shipScreenX, shipScreenY, frame.tilt);
+                replayFrameIndex += 0.25; 
+                if (Math.floor(replayFrameIndex) >= historyBuffer.length - 1) {
+                    replayExploding = true; replayExplosionTimer = 0; replayParticles = [];
+                    const shardFill = hitObjectType === 'blackhole' ? '#FFF' : '#000';
+                    const shardStroke = hitObjectType === 'blackhole' ? '#555' : '#AAA';
+
+                    for(let i = 0; i < 10; i++) {
+                        let angle = (Math.PI * 2 / 10) * i + Math.random(); let speed = 25 + Math.random() * 20; 
+                        replayParticles.push({
+                            x: 0, y: 0, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                            rot: Math.random() * Math.PI * 2, vrot: (Math.random() - 0.5) * 0.4, fill: shardFill, stroke: shardStroke
+                        });
+                    }
+                }
+            } else {
+                ctx.save(); ctx.translate(shipScreenX, shipScreenY);
+
+                let fireAlpha = Math.max(0, 1 - (replayExplosionTimer / 60));
+                let bloomSize = Math.min(replayExplosionTimer * 8, 120); 
+
+                ctx.globalAlpha = fireAlpha; ctx.fillStyle = '#FFA500'; ctx.beginPath(); ctx.arc(0, 0, bloomSize, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(0, 0, bloomSize * 0.6, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+
+                replayParticles.forEach(p => {
+                    p.x += p.vx * 0.25; p.y += p.vy * 0.25; p.rot += p.vrot * 0.25;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+                    ctx.fillStyle = p.fill; ctx.strokeStyle = p.stroke; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(8, 8); ctx.lineTo(-8, 8); ctx.closePath();
+                    ctx.fill(); ctx.stroke(); ctx.restore();
+                });
+                ctx.restore();
+
+                replayExplosionTimer++;
+                if (replayExplosionTimer >= 60) { replayExploding = false; replayFrameIndex = 0; }
+            }
+
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; ctx.font = 'bold 2rem Courier New'; ctx.textAlign = 'left';
+            ctx.fillText('● REPLAY Approach 1/4x', 20, 40);
+        }
+
+        function update() {
+            const now = Date.now(); preciseElapsed = (now - startTime) / 1000; elapsed = Math.floor(preciseElapsed);
+            document.getElementById('time').innerText = `${elapsed}s`;
+
+            if (elapsed - lastSpeedUpTime >= 10) { currentSpeed *= 1.5; lastSpeedUpTime = elapsed; }
+
+            miles += Math.floor(currentSpeed / 10); document.getElementById('distance').innerText = `${miles}mi`;
+
+            updateEngineSound();
+
+            cachedHazeRatio = Math.min(1, preciseElapsed / 4);
+            
+            let r = Math.floor(135 * (1 - cachedHazeRatio));
+            let g = Math.floor(206 * (1 - cachedHazeRatio));
+            let b = Math.floor(235 * (1 - cachedHazeRatio));
+            
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (cachedHazeRatio < 1) {
+                let hazeOpacity = 0.4 * (1 - cachedHazeRatio);
+                ctx.fillStyle = `rgba(255, 255, 255, ${hazeOpacity})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (preciseElapsed > 0.5 && preciseElapsed < 3.5) warningEl.style.opacity = 1;
+                else warningEl.style.opacity = 0;
+            } else {
+                warningEl.style.opacity = 0;
+            }
+
+            if (!useMouse) {
+                let speedMod = 300 * (baseSpeed / currentSpeed); 
+                if (keys.ArrowLeft) playerTargetX -= speedMod; if (keys.ArrowRight) playerTargetX += speedMod;
+                if (keys.ArrowUp) playerTargetY -= speedMod; if (keys.ArrowDown) playerTargetY += speedMod;
+            } else {
+                playerTargetX = mouseInputX * boundsX; playerTargetY = mouseInputY * boundsY;
+            }
+            
+            playerTargetX = Math.max(-boundsX, Math.min(boundsX, playerTargetX));
+            playerTargetY = Math.max(-boundsY, Math.min(boundsY, playerTargetY));
+
+            playerX += (playerTargetX - playerX) * 0.1; playerY += (playerTargetY - playerY) * 0.1;
+
+            let gaugeX = 50 + ((playerTargetX / boundsX) * 50); let gaugeY = 50 + ((playerTargetY / boundsY) * 50);
+            steeringDot.style.left = `${gaugeX}%`; steeringDot.style.top = `${gaugeY}%`;
+
+            const driftMaxX = canvas.width * 0.2; const driftMaxY = canvas.height * 0.1;
+            const targetVisualX = (playerTargetX / boundsX) * driftMaxX; const targetVisualY = (playerTargetY / boundsY) * driftMaxY;
+            
+            const driftFactor = Math.max(0.02, 0.08 * (baseSpeed / currentSpeed));
+            visualShipX += (targetVisualX - visualShipX) * driftFactor; visualShipY += (targetVisualY - visualShipY) * driftFactor;
+
+            let rawTilt = (playerTargetX - playerX) * 0.001; tilt = Math.max(-0.5, Math.min(0.5, rawTilt));
+
+            const cx = canvas.width / 2; const cy = canvas.height / 2;
+
+            ctx.fillStyle = '#FFF';
+            stars.forEach(star => {
+                star.z -= currentSpeed;
+                if (star.z <= 0) { star.z = 4000; star.x = (Math.random() - 0.5) * 12000; star.y = (Math.random() - 0.5) * 4000; }
+                let starOpacity = cachedHazeRatio < 1 ? 0.2 + (0.8 * cachedHazeRatio) : 1; 
+                const scale = focalLength / star.z;
+                const screenX = cx + (star.x - playerX) * scale; const screenY = cy + (star.y - playerY) * scale;
+                if (screenX > 0 && screenX < canvas.width && screenY > 0 && screenY < canvas.height) {
+                    let starSize = Math.max(1, scale * 4); 
+                    ctx.globalAlpha = starOpacity; 
+                    ctx.fillRect(screenX, screenY, starSize, starSize);
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            // THIS WAS THE MISSING SPAWNER!
+            while (objects.length < 40) objects.push(createObject(4000 + Math.random() * 2000));
+
+            // Sort Ascending (Furthest z to Closest z)
+            objects.sort((a, b) => b.z - a.z);
+
+            // Iterate backwards
+            for (let i = objects.length - 1; i >= 0; i--) {
+                let obj = objects[i];
+                obj.z -= currentSpeed;
+
+                if (obj.z <= 0) { objects.splice(i, 1); continue; }
+
+                const scale = focalLength / obj.z;
+                const screenX = cx + (obj.x - playerX) * scale; const screenY = cy + (obj.y - playerY) * scale; 
+
+                if (obj.z < 150 && obj.z > 10) {
+                    const shipScreenX = cx + visualShipX;
+                    const shipScreenY = (canvas.height * 0.6) + visualShipY - 5; 
+                    
+                    let dx = screenX - shipScreenX; 
+                    let dy = screenY - shipScreenY; 
+                    let screenDist = Math.sqrt(dx*dx + dy*dy);
+
+                    let hitThreshold = (obj.size * scale) + 20; 
+
+                    if (screenDist < hitThreshold) {
+                        saveHistoryFrame(cachedHazeRatio); gameOver(obj); return;
+                    }
+                }
+
+                if (screenX > -500 && screenX < canvas.width + 500 && screenY > -500 && screenY < canvas.height + 500) {
+                    drawEntity(ctx, obj.type, obj.color, obj.size, screenX, screenY, scale);
+                }
+            }
+
+            drawShip(ctx, cx + visualShipX, (canvas.height * 0.6) + visualShipY, tilt);
+            saveHistoryFrame(cachedHazeRatio);
+        }
+
+        function gameLoop() {
+            if (isPlaying) update(); else if (isReplaying) renderReplay();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            initAudio(); startEngineSound();
+            menu.style.display = 'none'; document.body.classList.add('playing'); 
+            
+            isPlaying = true; isReplaying = false; replayExploding = false;
+            miles = 0; currentSpeed = baseSpeed; startTime = Date.now(); preciseElapsed = 0; lastSpeedUpTime = 0;
+            
+            playerX = 0; playerY = 0; playerTargetX = 0; playerTargetY = 0; visualShipX = 0; visualShipY = 0; tilt = 0;
+            historyBuffer = []; steeringDot.style.left = `50%`; steeringDot.style.top = `50%`;
+            objects = []; initStars();
+        }
+
+        startBtn.addEventListener('click', startGame);
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
