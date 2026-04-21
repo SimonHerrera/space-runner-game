@@ -50,7 +50,7 @@
             <div>Time: <span id="finalTime"></span></div><div>Distance: <span id="finalDistance"></span></div>
         </div>
         <div class="leaderboard" id="leaderboardContainer" style="display:none;">
-            <h2>TOP 5 PILOTS</h2><div id="leaderboardList"></div>
+            <h2>SPACE RUNNER TOP 5</h2><div id="leaderboardList"></div>
         </div>
         
         <div id="nameEntry" style="display:none; margin-bottom: 20px;">
@@ -74,7 +74,7 @@
         const focalLength = 300; let playerTargetX = 0; let playerTargetY = 0; let playerX = 0; let playerY = 0; let visualShipX = 0; let visualShipY = 0; let tilt = 0;
         const boundsX = 4000; const boundsY = 1500; let objects = []; let stars = []; let particles = [];
         let keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false }; let useMouse = false; let mouseInputX = 0; let mouseInputY = 0;
-        let audioCtx, engineOscillator, engineGain; let highScores = JSON.parse(localStorage.getItem('spaceRunner2Scores')) || []; let currentHighScoreIndex = -1;
+        let audioCtx, engineOscillator, engineGain; let highScores = (() => { const saved = localStorage.getItem('spaceRunner2Scores'); const parsed = saved ? JSON.parse(saved) : []; return parsed.map(s => typeof s === 'number' ? { score: s, time: 0, name: '---' } : s).filter(e => e && e.score !== undefined); })(); let currentHighScoreIndex = -1;
         let historyBuffer = [], replayFrameIndex = 0, replayExploding = false, replayExplosionTimer = 0, replayParticles = [], hitObjectType = ''; let cachedHazeRatio = 0;
 
         window.addEventListener('keydown', (e) => { if(keys.hasOwnProperty(e.code)) { keys[e.code] = true; useMouse = false; } if(e.code === 'Escape' && isPlaying) abortGame(); });
@@ -85,7 +85,7 @@
         window.addEventListener('touchmove', (e) => { if (isPlaying) { e.preventDefault(); handlePointer(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
 
         function updateHighScores(newScore, newTime) { highScores.push({ score: newScore, time: newTime, name: 'AAA' }); highScores.sort((a, b) => b.score - a.score); highScores = highScores.slice(0, 5); localStorage.setItem('spaceRunner2Scores', JSON.stringify(highScores)); }
-        function renderLeaderboard() { const list = document.getElementById('leaderboardList'); list.innerHTML = ''; for (let i = 0; i < 5; i++) { const row = document.createElement('div'); row.className = i === 0 ? 'score-row score-1st' : 'score-row'; if (i < highScores.length) { const entry = highScores[i]; row.innerText = `${i + 1}. ${entry.name} ${entry.time}s ${entry.score}mi`; } else { row.innerText = `${i + 1}. - - - -`; } list.appendChild(row); } }
+        function renderLeaderboard() { const list = document.getElementById('leaderboardList'); list.innerHTML = ''; highScores = highScores.filter(e => e && e.score !== undefined); for (let i = 0; i < 5; i++) { const row = document.createElement('div'); row.className = i === 0 ? 'score-row score-1st' : 'score-row'; if (i < highScores.length) { const entry = highScores[i]; if (i === 0) { row.innerText = `${i + 1}. ${entry.name || '---'} ${entry.time || 0}s ${entry.score}mi`; } else { row.innerText = `${i + 1}. ---- ${entry.time || 0}s ${entry.score}mi`; } } else { row.innerText = `${i + 1}. - - - -`; } list.appendChild(row); } }
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function startEngineSound() { engineOscillator = audioCtx.createOscillator(); engineGain = audioCtx.createGain(); engineOscillator.type = 'sawtooth'; engineOscillator.frequency.value = 50; engineGain.gain.value = 0.08; engineOscillator.connect(engineGain); engineGain.connect(audioCtx.destination); engineOscillator.start(); }
