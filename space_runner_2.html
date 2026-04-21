@@ -22,7 +22,7 @@
         .instructions { font-size: 1.7rem; text-align: center; max-width: 600px; margin-bottom: 25px; line-height: 1.6; color: #aaa; }
         #gameOverStats { font-size: 1.5rem; text-align: center; margin-bottom: 20px; }
         .leaderboard { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; width: 100%; }
-        .leaderboard h2 { margin: 0 0 10px 0; font-size: 1rem; color: #0ff; letter-spacing: 2px; }
+        .leaderboard h2 { margin: 0 0 10px 0; font-size: 1.2rem; color: #0ff; letter-spacing: 2px; }
         .score-row { margin: 4px 0; font-weight: bold; font-size: 1rem; }
         .score-1st { font-size: 1.3rem; color: #ff0; text-shadow: 0 0 10px rgba(255, 255, 0, 0.5); }
         button { padding: 15px 40px; font-size: 1.2rem; font-family: inherit; font-weight: bold; background: linear-gradient(180deg, #00d4ff 0%, #0066ff 100%); color: #fff; border: none; border-radius: 5px; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 20px rgba(0, 200, 255, 0.4); }
@@ -50,7 +50,12 @@
             <div>Time: <span id="finalTime"></span></div><div>Distance: <span id="finalDistance"></span></div>
         </div>
         <div class="leaderboard" id="leaderboardContainer" style="display:none;">
-            <h2>SPACE RUNNER TOP 5</h2><div id="leaderboardList"></div>
+            <h2>SPACE RUNNER TOP 5</h2>
+            <div id="leaderboardHeader" style="display:flex; justify-content:center; gap:40px; font-size:0.9rem; color:#0ff; margin-bottom:5px;">
+                <span style="width:180px; text-align:center;">TIME</span>
+                <span style="width:180px; text-align:center;">MILES</span>
+            </div>
+            <div id="leaderboardList"></div>
         </div>
         
         <div id="nameEntry" style="display:none; margin-bottom: 20px;">
@@ -85,7 +90,7 @@
         window.addEventListener('touchmove', (e) => { if (isPlaying) { e.preventDefault(); handlePointer(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
 
         function updateHighScores(newScore, newTime) { highScores.push({ score: newScore, time: newTime, name: 'AAA' }); highScores.sort((a, b) => b.score - a.score); highScores = highScores.slice(0, 5); localStorage.setItem('spaceRunner2Scores', JSON.stringify(highScores)); }
-        function renderLeaderboard() { const list = document.getElementById('leaderboardList'); list.innerHTML = ''; highScores = highScores.filter(e => e && e.score !== undefined); for (let i = 0; i < 5; i++) { const row = document.createElement('div'); row.className = i === 0 ? 'score-row score-1st' : 'score-row'; if (i < highScores.length) { const entry = highScores[i]; if (i === 0) { row.innerText = `${i + 1}. ${entry.name || '---'} ${entry.time || 0}s ${entry.score}mi`; } else { row.innerText = `${i + 1}. ---- ${entry.time || 0}s ${entry.score}mi`; } } else { row.innerText = `${i + 1}. - - - -`; } list.appendChild(row); } }
+        function renderLeaderboard() { const list = document.getElementById('leaderboardList'); list.innerHTML = ''; highScores = highScores.filter(e => e && e.score !== undefined); for (let i = 0; i < 5; i++) { const row = document.createElement('div'); row.style.cssText = 'display:flex; justify-content:center; gap:40px; font-size:1.2rem; margin:3px 0;'; row.className = i === 0 ? 'score-row score-1st' : 'score-row'; if (i < highScores.length) { const entry = highScores[i]; if (i === 0) { row.innerHTML = `<span style="width:180px; text-align:center; color:#ff0;">${entry.name || '---'}</span><span style="width:180px; text-align:center;">${entry.time || 0}s</span><span style="width:180px; text-align:center;">${entry.score}mi</span>`; } else { row.innerHTML = `<span style="width:180px; text-align:center;">----</span><span style="width:180px; text-align:center;">${entry.time || 0}s</span><span style="width:180px; text-align:center;">${entry.score}mi</span>`; } } else { row.innerHTML = `<span style="width:180px; text-align:center;">-</span><span style="width:180px; text-align:center;">-</span><span style="width:180px; text-align:center;">-</span>`; } list.appendChild(row); } }
 
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
         function startEngineSound() { engineOscillator = audioCtx.createOscillator(); engineGain = audioCtx.createGain(); engineOscillator.type = 'sawtooth'; engineOscillator.frequency.value = 50; engineGain.gain.value = 0.08; engineOscillator.connect(engineGain); engineGain.connect(audioCtx.destination); engineOscillator.start(); }
