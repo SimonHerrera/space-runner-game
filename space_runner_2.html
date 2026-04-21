@@ -9,13 +9,13 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Orbitron', monospace; touch-action: none; color: #FFF; }
         body.playing { cursor: none !important; }
         #gameCanvas { display: block; width: 100%; height: 100%; }
-        #ui-layer { position: absolute; top: 15px; left: 0; width: 100%; padding: 0; box-sizing: border-box; display: flex; justify-content: center; gap: 15vw; text-shadow: 0 0 10px #0ff; font-weight: bold; font-size: 1.8rem; pointer-events: none; z-index: 10; }
+        #ui-layer { position: absolute; top: 30px; left: 0; width: 100%; padding: 0 40px; box-sizing: border-box; display: flex; justify-content: center; gap: 20vw; text-shadow: 0 0 10px #0ff; font-weight: bold; font-size: 3.6rem; pointer-events: none; z-index: 10; }
         .stat-box { display: flex; flex-direction: column; align-items: center; }
         .stat-box span:first-child { font-size: 0.7rem; opacity: 0.7; margin-bottom: -3px; letter-spacing: 2px; }
-        #steering-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 120px; height: 60px; background: rgba(0, 200, 255, 0.1); border: 2px solid rgba(0, 200, 255, 0.4); border-radius: 8px; pointer-events: none; z-index: 10; overflow: hidden; }
+        #steering-container { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 180px; height: 90px; background: rgba(0, 200, 255, 0.1); border: 3px solid rgba(0, 200, 255, 0.4); border-radius: 12px; pointer-events: none; z-index: 10; overflow: hidden; }
         .crosshair-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0, 200, 255, 0.2); }
         .crosshair-v { position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(0, 200, 255, 0.2); }
-        #steering-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: #0ff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 8px #0ff; transition: left 0.08s linear, top 0.08s linear; }
+        #steering-dot { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; background: #0ff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 12px #0ff; transition: left 0.1s linear, top 0.1s linear; }
         #menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, #1a0a2e 0%, #0a0a1a 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
         h1 { font-size: 2.5rem; margin-bottom: 5px; text-align: center; text-shadow: 0 0 30px #0ff; }
         .subtitle { font-size: 1rem; color: #0ff; margin-bottom: 20px; letter-spacing: 4px; }
@@ -27,11 +27,11 @@
         .score-1st { font-size: 1.3rem; color: #ff0; text-shadow: 0 0 10px rgba(255, 255, 0, 0.5); }
         button { padding: 15px 40px; font-size: 1.2rem; font-family: inherit; font-weight: bold; background: linear-gradient(180deg, #00d4ff 0%, #0066ff 100%); color: #fff; border: none; border-radius: 5px; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 20px rgba(0, 200, 255, 0.4); }
         button:active { transform: scale(0.95); }
-        #levelIndicator { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: #ff0; font-size: 1rem; text-shadow: 0 0 10px #ff0; z-index: 10; letter-spacing: 2px; }
+        #levelIndicator { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: #ff0; font-size: 1.8rem; text-shadow: 0 0 15px #ff0; z-index: 10; letter-spacing: 3px; }
         #levelIndicator.max { color: #f00; animation: pulse 0.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        #warning { position: absolute; top: 30%; width: 100%; text-align: center; color: #f00; font-size: 1.5rem; font-weight: bold; text-shadow: 2px 2px 0 #000; opacity: 0; pointer-events: none; z-index: 15; transition: opacity 0.5s; letter-spacing: 3px; }
-        @media (max-width: 600px) { #ui-layer { font-size: 1.2rem; gap: 12vw; } h1 { font-size: 1.8rem; } #warning { font-size: 1rem; } .instructions { font-size: 0.75rem; padding: 0 20px; } }
+        #warning { position: absolute; top: 25%; width: 100%; text-align: center; color: #f00; font-size: 2.5rem; font-weight: bold; text-shadow: 3px 3px 0 #000; opacity: 0; pointer-events: none; z-index: 15; transition: opacity 0.5s; letter-spacing: 5px; }
+        @media (max-width: 600px) { #ui-layer { font-size: 2rem; gap: 15vw; padding: 0 20px; } h1 { font-size: 1.8rem; } #warning { font-size: 1.5rem; } .instructions { font-size: 0.75rem; padding: 0 20px; } #steering-container { width: 140px; height: 70px; bottom: 40px; } #steering-dot { width: 12px; height: 12px; } #levelIndicator { font-size: 1.3rem; } }
     </style>
 </head>
 <body>
@@ -89,7 +89,8 @@
         function createObject(zPos) { let type = 'asteroid'; let x = (Math.random() - 0.5) * 10000; let y = (Math.random() - 0.5) * 3500; let size = 40;
             if (preciseElapsed < 4) { type = Math.random() > 0.5 ? 'airplane' : 'helicopter'; size = 35; } else { const rand = Math.random(); if (rand > 0.95) type = 'blackhole'; else if (rand > 0.93) type = 'sun'; else if (rand > 0.78) type = 'planet'; else type = 'asteroid'; }
             if (type === 'asteroid') size = Math.random() * 40 + 15; if (type === 'planet') size = Math.random() * 200 + 80; if (type === 'sun') size = Math.random() * 150 + 150; if (type === 'blackhole') size = 120;
-            return { type, size, color: type === 'planet' ? ['#FF6B6B', '#4ECDC4', '#FFE66D', '#8A2BE2'][Math.floor(Math.random() * 4)] : (type === 'asteroid' ? '#876' : (type === 'sun' ? '#FFD700' : '#000')), x, y, z: zPos };
+            const asteroidColors = ['#6B6B5A', '#7A7068', '#5A5A4A', '#8B7B6B', '#4A4A3A'];
+            return { type, size, color: type === 'planet' ? ['#FF6B6B', '#4ECDC4', '#FFE66D', '#8A2BE2'][Math.floor(Math.random() * 4)] : (type === 'asteroid' ? asteroidColors[Math.floor(Math.random() * asteroidColors.length)] : (type === 'sun' ? '#FFD700' : '#000')), x, y, z: zPos };
         }
 
         function initStars() { stars = []; for(let i=0; i<200; i++) stars.push({ x: (Math.random() - 0.5) * 10000, y: (Math.random() - 0.5) * 3500, z: Math.random() * 3500 }); }
@@ -98,7 +99,7 @@
             ctx.save(); ctx.translate(screenX, screenY); let renderScale = Math.max(1.2 / size, scale); ctx.scale(renderScale, renderScale);
             if (type === 'airplane') { ctx.fillStyle = '#FFF'; ctx.fillRect(-18, -4, 36, 8); ctx.fillRect(-4, -18, 8, 36); ctx.fillStyle = 'red'; ctx.fillRect(12, -4, 4, 4); }
             else if (type === 'helicopter') { ctx.fillStyle = '#DDD'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-4, 0, 8, 25); ctx.fillStyle = '#FFF'; ctx.fillRect(-25, -12, 50, 2); }
-            else if (type === 'asteroid') { ctx.fillStyle = color; ctx.strokeStyle = '#AAA'; ctx.lineWidth = 1.5; ctx.beginPath(); for(let i=0; i<8; i++) { let angle = (i/8) * Math.PI * 2; let r = size * (0.7 + (Math.sin(angle * 3)*0.3)); if(i===0) ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r); else ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
+            else if (type === 'asteroid') { ctx.fillStyle = color; ctx.strokeStyle = '#888'; ctx.lineWidth = 2; ctx.beginPath(); for(let i=0; i<12; i++) { let angle = (i/12) * Math.PI * 2; let r = size * (0.85 + (Math.sin(angle * 5 + 1.5)*0.15)); if(i===0) ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r); else ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
             else if (type === 'planet') { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.ellipse(0, 0, size * 1.4, size * 0.35, Math.PI/6, 0, Math.PI*2); ctx.stroke(); }
             else if (type === 'sun') { ctx.fillStyle = color; ctx.shadowBlur = 40; ctx.shadowColor = '#FFA500'; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; }
             else if (type === 'blackhole') { ctx.fillStyle = '#000'; ctx.shadowBlur = 25; ctx.shadowColor = '#A0F'; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(138, 43, 226, 0.4)'; ctx.lineWidth = 4; ctx.stroke(); }
@@ -132,14 +133,14 @@
 
         function update() {
             const now = Date.now(); preciseElapsed = (now - startTime) / 1000; elapsed = Math.floor(preciseElapsed); document.getElementById('time').innerText = `${elapsed}s`;
-            if (elapsed - lastSpeedUpTime >= 10 && elapsed <= 90) { currentSpeed *= 1.4; lastSpeedUpTime = elapsed; level = Math.min(9, Math.floor(elapsed / 10) + 1); levelEl.textContent = 'LEVEL ' + level; levelEl.classList.remove('max'); }
-            if (elapsed >= 90) { levelEl.textContent = 'SURVIVE!'; levelEl.classList.add('max'); currentSpeed = baseSpeed * Math.pow(1.4, 8); }
+            if (elapsed - lastSpeedUpTime >= 10 && elapsed < 90) { currentSpeed *= 1.5; lastSpeedUpTime = elapsed; level = Math.min(9, Math.floor(elapsed / 10) + 1); levelEl.textContent = 'LEVEL ' + level; levelEl.classList.remove('max'); }
+            if (elapsed >= 90) { levelEl.textContent = 'SURVIVE!'; levelEl.classList.add('max'); currentSpeed = baseSpeed * Math.pow(1.5, 8); }
             miles += Math.floor(currentSpeed / 8); document.getElementById('distance').innerText = `${miles}mi`; updateEngineSound();
             cachedHazeRatio = Math.min(1, preciseElapsed / 10);
             let r = Math.floor(135 * (1 - cachedHazeRatio)), g = Math.floor(206 * (1 - cachedHazeRatio)), b = Math.floor(235 * (1 - cachedHazeRatio));
             ctx.fillStyle = `rgb(${r}, ${g}, ${b})`; ctx.fillRect(0, 0, canvas.width, canvas.height);
             if (cachedHazeRatio < 1) { ctx.fillStyle = `rgba(255, 255, 255, ${0.3 * (1 - cachedHazeRatio)})`; ctx.fillRect(0, 0, canvas.width, canvas.height); if (preciseElapsed > 0.5 && preciseElapsed < 9.5) warningEl.style.opacity = 1; else warningEl.style.opacity = 0; } else warningEl.style.opacity = 0;
-            if (!useMouse) { let speedMod = 250 * (baseSpeed / currentSpeed); if (keys.ArrowLeft) playerTargetX -= speedMod; if (keys.ArrowRight) playerTargetX += speedMod; if (keys.ArrowUp) playerTargetY -= speedMod; if (keys.ArrowDown) playerTargetY += speedMod; } else { playerTargetX = mouseInputX * boundsX; playerTargetY = mouseInputY * boundsY; }
+            if (!useMouse) { let speedMod = 250 * (baseSpeed / currentSpeed); let responsivenessFactor = Math.pow(1.5, -Math.floor(elapsed / 10)); speedMod *= responsivenessFactor; if (keys.ArrowLeft) playerTargetX -= speedMod; if (keys.ArrowRight) playerTargetX += speedMod; if (keys.ArrowUp) playerTargetY -= speedMod; if (keys.ArrowDown) playerTargetY += speedMod; } else { playerTargetX = mouseInputX * boundsX; playerTargetY = mouseInputY * boundsY; }
             playerTargetX = Math.max(-boundsX, Math.min(boundsX, playerTargetX)); playerTargetY = Math.max(-boundsY, Math.min(boundsY, playerTargetY));
             playerX += (playerTargetX - playerX) * 0.1; playerY += (playerTargetY - playerY) * 0.1;
             steeringDot.style.left = `${50 + ((playerTargetX / boundsX) * 50)}%`; steeringDot.style.top = `${50 + ((playerTargetY / boundsY) * 50)}%`;
