@@ -45,7 +45,7 @@
     <div id="menu">
         <h1>SPACE RUNNER</h1>
         <div class="subtitle">2.0 USA EDITION</div>
-        <p class="instructions"><strong>Mission:</strong> Survive as long as possible flying through space.<br><br>Use <strong>Arrow Keys</strong>, <strong>Mouse</strong>, or <strong>Touch</strong> to steer.<br>Press <strong>ESC</strong> to abort.<br><br>Avoid asteroids, planets, aircraft, and black holes!</p>
+        <p class="instructions"><strong>Mission:</strong> Survive flying through space.<br><br>Use <strong>Arrow Keys</strong>, <strong>Mouse</strong>, or <strong>Touch</strong> to steer.<br>Press <strong>ESC</strong> to abort.<br><br>Avoid asteroids, planets, aircraft, black holes!</p>
         <div id="gameOverStats" style="display:none;">
             <div>Time: <span id="finalTime"></span></div><div>Distance: <span id="finalDistance"></span></div>
         </div>
@@ -79,7 +79,7 @@
         const focalLength = 300; let playerTargetX = 0; let playerTargetY = 0; let playerX = 0; let playerY = 0; let visualShipX = 0; let visualShipY = 0; let tilt = 0;
         const boundsX = 4000; const boundsY = 1500; let objects = []; let stars = []; let particles = [];
         let keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false }; let useMouse = false; let mouseInputX = 0; let mouseInputY = 0;
-        let audioCtx, engineOscillator, engineGain; let highScores = (() => { const saved = localStorage.getItem('spaceRunner2Scores'); const parsed = saved ? JSON.parse(saved) : []; return parsed.map(s => typeof s === 'number' ? { score: s, time: 0, name: '---' } : s).filter(e => e && e.score !== undefined); })(); let currentHighScoreIndex = -1;
+        let audioCtx, engineOscillator, engineGain; let highScores = []; try { const saved = localStorage.getItem('spaceRunner2Scores'); if (saved) { const parsed = JSON.parse(saved); highScores = parsed.map(s => typeof s === 'number' ? { score: s, time: 0, name: '---' } : s).filter(e => e && e.score !== undefined); } } catch(e) { highScores = []; } let currentHighScoreIndex = -1;
         let historyBuffer = [], replayFrameIndex = 0, replayExploding = false, replayExplosionTimer = 0, replayParticles = [], hitObjectType = ''; let cachedHazeRatio = 0;
 
         window.addEventListener('keydown', (e) => { if(keys.hasOwnProperty(e.code)) { keys[e.code] = true; useMouse = false; } if(e.code === 'Escape' && isPlaying) abortGame(); });
